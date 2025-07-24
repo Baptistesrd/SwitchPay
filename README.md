@@ -8,4 +8,5 @@ SwitchPay is a smart routing layer for payments. Our mission is simple:
 SwitchPay is the Zapier of payments: programmable, modular, and smart.
 
 DM @batouS8 🤠 on Twitter or drop a line at baptiste.sardou@edhec.com
-🚀 Let’s build the payment layer of the future — together.
+
+Let’s build the payment layer of the future. Together.
