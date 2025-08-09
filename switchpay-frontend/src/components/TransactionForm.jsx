@@ -34,12 +34,19 @@ export default function TransactionForm({ onNewTransaction }) {
       device: formData.device,
     };
 
-    console.log("✅ Form submitted:", payload);
+    // Idempotency-Key par requête
+    const idempotencyKey = (window.crypto && window.crypto.randomUUID)
+      ? window.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     setLoading(true);
 
     try {
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/transaction`, payload, {
-        headers: { 'x-api-key': apiKey },
+        headers: {
+          'x-api-key': apiKey,
+          'Idempotency-Key': idempotencyKey,
+        },
       });
 
       toast({
@@ -137,4 +144,5 @@ export default function TransactionForm({ onNewTransaction }) {
     </form>
   );
 }
+
 

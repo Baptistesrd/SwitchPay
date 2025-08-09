@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Table,
   Thead,
@@ -10,7 +11,56 @@ import {
   Box,
   Heading,
   Text,
+  Button,
+  useToast
 } from '@chakra-ui/react';
+import axios from 'axios';
+
+// Composant pour simuler un webhook et mettre à jour le statut de la transaction
+function SimulateWebhookButton({ transactionId }) {
+  const [loading, setLoading] = React.useState(false);
+  const toast = useToast();
+
+  const simulateWebhook = async () => {
+    setLoading(true);
+    const status = Math.random() > 0.5 ? 'success' : 'failed'; // Statut aléatoire
+
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/webhook/stripe`, {
+        tx_id: transactionId,
+        status: status
+      });
+      toast({
+        title: `Transaction ${status}`,
+        description: `Transaction ${transactionId} status updated to ${status}.`,
+        status: 'success',
+        duration: 4000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'There was an error simulating the webhook.',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      colorScheme="blue"
+      onClick={simulateWebhook}
+      isLoading={loading}
+      loadingText="Updating"
+    >
+      Simulate Webhook
+    </Button>
+  );
+}
 
 export default function TransactionTable({ transactions }) {
   return (
@@ -34,6 +84,7 @@ export default function TransactionTable({ transactions }) {
                 <Th>Country</Th>
                 <Th>PSP</Th>
                 <Th>Status</Th>
+                <Th>Actions</Th> {/* Nouvelle colonne pour le bouton */}
               </Tr>
             </Thead>
             <Tbody>
@@ -55,6 +106,9 @@ export default function TransactionTable({ transactions }) {
                     >
                       {tx.status}
                     </Badge>
+                  </Td>
+                  <Td>
+                    <SimulateWebhookButton transactionId={tx.id} /> {/* Intégration du bouton */}
                   </Td>
                 </Tr>
               ))}
