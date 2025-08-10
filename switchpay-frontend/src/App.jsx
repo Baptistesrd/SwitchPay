@@ -20,6 +20,7 @@ import {
 import { SunIcon, MoonIcon, DownloadIcon } from '@chakra-ui/icons';
 import TransactionForm from './components/TransactionForm';
 import TransactionTable from './components/TransactionTable';
+import DashCharts from './components/DashCharts';   // ← AJOUT
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
@@ -51,10 +52,10 @@ export default function App() {
   };
 
   const exportCSV = () => {
-    const csvHeader = "ID,Amount,Currency,Country,PSP,Status\n";
+    const csvHeader = "ID,Amount,Currency,Country,PSP,Status,LatencyMs,CreatedAt\n";
     const csvRows = transactions
       .map((tx) =>
-        `${tx.id},${tx.montant},${tx.devise},${tx.pays},${tx.psp},${tx.status}`
+        `${tx.id},${tx.montant},${tx.devise},${tx.pays},${tx.psp},${tx.status},${tx.latency_ms ?? ""},${tx.created_at}`
       )
       .join("\n");
 
@@ -70,7 +71,7 @@ export default function App() {
   };
 
   // === KPIs Dashboard logic ===
-  const totalAmount = transactions.reduce((acc, tx) => acc + tx.montant, 0);
+  const totalAmount = transactions.reduce((acc, tx) => acc + (Number(tx.montant) || 0), 0);
   const count = transactions.length;
   const successCount = transactions.filter(tx => tx.status === "success").length;
   const failCount = count - successCount;
@@ -82,13 +83,17 @@ export default function App() {
     <Box maxW="6xl" mx="auto" px={6} py={6}>
       <Flex mb={6} align="center">
         <Heading size="lg" fontWeight="extrabold">
-          SwitchPay.{' '}
+          SwitchPay.{'\u00A0'}
           <Box as="span" bgGradient="linear(to-r, brand.500, brand.300)" bgClip="text">
             Your Money Matters.
           </Box>
         </Heading>
         <Spacer />
-        <Button onClick={toggleColorMode} leftIcon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}>
+        <Button
+          onClick={toggleColorMode}
+          leftIcon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+          aria-label={`Switch to ${colorMode === 'light' ? 'dark' : 'light'} mode`}
+        >
           {colorMode === 'light' ? 'Dark' : 'Light'} Mode
         </Button>
       </Flex>
@@ -142,6 +147,11 @@ export default function App() {
                   <StatNumber>{failCount}</StatNumber>
                 </Stat>
               </SimpleGrid>
+
+              {/* === Graphs avancés === */}
+              <Box mt={8}>
+                <DashCharts transactions={transactions} />
+              </Box>
             </MotionBox>
           </TabPanel>
         </TabPanels>

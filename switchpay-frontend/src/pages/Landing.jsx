@@ -1,19 +1,23 @@
+// src/pages/Landing.jsx (VERSION FINALE)
 import React, { useEffect, useState } from 'react';
 import {
   Box, Container, Flex, HStack, VStack, Stack, Spacer, Button, IconButton,
   Heading, Text, Badge, SimpleGrid, Stat, StatLabel, StatNumber, useColorMode,
-  useColorModeValue, Link as ChakraLink
+  useColorModeValue, Link as ChakraLink, Divider, Tag, TagLeftIcon, TagLabel
 } from '@chakra-ui/react';
-import { MoonIcon, SunIcon, LockIcon, CheckCircleIcon, TimeIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { MoonIcon, SunIcon, LockIcon, CheckCircleIcon, TimeIcon, ExternalLinkIcon, StarIcon } from '@chakra-ui/icons';
 import { motion } from 'framer-motion';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AnimatedParticles from '../components/AnimatedParticles';
+import GlowBlob from '../components/GlowBlob';
+import TrustLogos from '../components/TrustLogos';
 
 const MotionBox = motion(Box);
 
 const Section = ({ children, id, ...props }) => (
-  <Box as="section" id={id} py={{ base: 16, md: 24 }} {...props}>
-    <Container maxW="6xl">{children}</Container>
+  <Box as="section" id={id} py={{ base: 16, md: 24 }} position="relative" {...props}>
+    <Container maxW="6xl" position="relative" zIndex={1}>{children}</Container>
   </Box>
 );
 
@@ -36,6 +40,10 @@ export default function Landing() {
   const navigate = useNavigate();
   const cardBg = useColorModeValue('white', 'gray.800');
   const subText = useColorModeValue('gray.600', 'gray.300');
+  const heroBg = useColorModeValue(
+    'linear(to-b, white, #eaf2ff)',
+    'linear(to-b, gray.900, #0b1220)'
+  );
 
   // Live metrics from backend
   const [metrics, setMetrics] = useState({ total_transactions: 0, total_volume: 0, transactions_by_psp: {} });
@@ -43,9 +51,7 @@ export default function Landing() {
     try {
       const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/metrics`);
       setMetrics(res.data);
-    } catch (e) {
-      // silent fail on landing
-    }
+    } catch (e) { /* silent fail on landing */ }
   };
   useEffect(() => {
     fetchMetrics();
@@ -59,14 +65,24 @@ export default function Landing() {
   };
 
   return (
-    <Box>
+    <Box position="relative" overflow="hidden">
       {/* NAVBAR */}
-      <Box position="sticky" top="0" zIndex="100" bg={useColorModeValue('rgba(255,255,255,0.8)', 'rgba(17,24,39,0.6)')} backdropFilter="saturate(180%) blur(8px)" borderBottom="1px solid" borderColor={useColorModeValue('blackAlpha.100', 'whiteAlpha.200')}>
+      <Box
+        position="sticky" top="0" zIndex="100"
+        bg={useColorModeValue('rgba(255,255,255,0.8)', 'rgba(17,24,39,0.6)')}
+        backdropFilter="saturate(180%) blur(8px)"
+        borderBottom="1px solid"
+        borderColor={useColorModeValue('blackAlpha.100', 'whiteAlpha.200')}
+      >
         <Container maxW="6xl">
           <Flex h={16} align="center">
             <HStack spacing={3}>
               <Box w="10px" h="10px" borderRadius="full" bgGradient="linear(to-br, brand.400, brand.600)"></Box>
               <Heading size="md">SwitchPay</Heading>
+              <Tag size="sm" variant="subtle" colorScheme="purple" ml={2}>
+                <TagLeftIcon as={StarIcon}/>
+                <TagLabel>Fintech Infra</TagLabel>
+              </Tag>
             </HStack>
             <Spacer />
             <HStack spacing={6} display={{ base: 'none', md: 'flex' }}>
@@ -84,20 +100,21 @@ export default function Landing() {
       </Box>
 
       {/* HERO */}
-      <Box
-        as="header"
-        bgGradient={useColorModeValue(
-          'linear(to-b, white, #eaf2ff)',
-          'linear(to-b, gray.900, #0b1220)'
-        )}
-      >
+      <Box as="header" bgGradient={heroBg} position="relative">
+        {/* Background FX */}
+        <Box position="absolute" inset={0} zIndex={0}>
+          <AnimatedParticles />
+          <GlowBlob top="5%" left="65%" size="520px" delay={0.2}/>
+          <GlowBlob top="55%" left="10%" size="460px" delay={0.6}/>
+        </Box>
+
         <Section id="hero" py={{ base: 20, md: 28 }}>
           <Stack direction={{ base: 'column', md: 'row' }} spacing={10} align="center">
             <VStack align="start" spacing={6} maxW="xl">
               <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>Smart Payment Routing</Badge>
               <Heading as="h1" size="2xl" lineHeight="1.1">
                 Welcome to SwitchPay.<br />
-                <Box as="span" bgGradient="linear(to-r, brand.500, brand.300)" bgClip="text">
+                <Box as="span" bgGradient="linear(to-r, brand.500, brand.300)" bgClip="text" className="shimmer">
                   Your money matters.
                 </Box>
               </Heading>
@@ -120,6 +137,9 @@ export default function Landing() {
                   <Text color={subText}>Latency-aware routing</Text>
                 </HStack>
               </HStack>
+
+              {/* Logos PSP (social proof) */}
+              <TrustLogos />
             </VStack>
 
             <MotionBox
@@ -134,7 +154,7 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <VStack align="stretch" spacing={4}>
+              <VStack align="stretch" spacing={5}>
                 <Heading size="md">What SwitchPay optimizes</Heading>
                 <SimpleGrid columns={2} spacing={3}>
                   <Feature label="Higher auth rates" />
@@ -142,9 +162,10 @@ export default function Landing() {
                   <Feature label="Geo coverage" />
                   <Feature label="Failover routing" />
                 </SimpleGrid>
-                <DividerLine />
+                <Divider />
+                <MiniKpis metrics={metrics} />
                 <Text fontSize="sm" color={subText}>
-                  Local demo: connected to your FastAPI backend (endpoints /transaction & /metrics).
+                  Local demo: connected to your FastAPI backend (endpoints <code>/transaction</code> & <code>/metrics</code>).
                 </Text>
               </VStack>
             </MotionBox>
@@ -157,9 +178,9 @@ export default function Landing() {
         <VStack align="start" spacing={8}>
           <Heading size="xl">How it works</Heading>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-            <Step number="1" title="Collect" desc="Ton front envoie la requête (montant, devise, pays, device) avec API Key." />
-            <Step number="2" title="Route" desc="Le smart router choisit le PSP optimal (Stripe/Adyen/Wise/Rapyd…)." />
-            <Step number="3" title="Settle" desc="Le paiement est traité, stocké en base, metrics mises à jour." />
+            <Step number="1" title="Collect" desc="Front envoie (montant, devise, pays, device) avec API Key." />
+            <Step number="2" title="Route" desc="Smart router choisit le PSP optimal (Stripe/Adyen/Wise/Rapyd…)." />
+            <Step number="3" title="Settle" desc="Paiement traité, stocké en base, KPIs mis à jour." />
           </SimpleGrid>
         </VStack>
       </Section>
@@ -169,14 +190,14 @@ export default function Landing() {
         <VStack align="start" spacing={8}>
           <Heading size="xl">Why SwitchPay</Heading>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-            <ValueCard title="Plug & Play" text="Un backend clair (FastAPI) et un front React/Chakra prêts pour l’itération." />
+            <ValueCard title="Plug & Play" text="Backend FastAPI + front React prêts pour l’itération." />
             <ValueCard title="Idempotency by design" text="Protection contre les retries — même clé = même réponse." />
-            <ValueCard title="Observability" text="KPIs, volumes et distribution par PSP via /metrics." />
+            <ValueCard title="Observability" text="KPIs, volumes & distribution par PSP via /metrics." />
           </SimpleGrid>
         </VStack>
       </Section>
 
-      {/* LIVE METRICS (branché) */}
+      {/* LIVE METRICS */}
       <Section id="metrics">
         <VStack align="start" spacing={6}>
           <Heading size="xl">Live Metrics</Heading>
@@ -209,7 +230,7 @@ export default function Landing() {
             <Heading size="xl">Security & Reliability</Heading>
             <Text color={subText}>
               API Keys via <code>.env</code>, stored idempotency, controlled CORS.
-              Gradually replace simulated PSPs with real calls (Stripe/Adyen SDK) when you're ready.
+              Replace simulated PSPs with real calls (Stripe/Adyen SDK) when you’re ready.
             </Text>
             <HStack spacing={4}>
               <Badge colorScheme="green" px={3} py={1} borderRadius="full"><LockIcon mr={1}/> API Key</Badge>
@@ -230,16 +251,16 @@ export default function Landing() {
           >
             <VStack align="stretch" spacing={4}>
               <Heading size="md">Next steps</Heading>
-              <RoadmapItem text="Brancher Stripe (PaymentIntent) avec clés réelles en sandbox." />
-              <RoadmapItem text="Ajouter retry & failover (PSP fallback) côté backend." />
-              <RoadmapItem text="Score de routage = coût + latence + auth rate + région." />
+              <RoadmapItem text="Connect Stripe (PaymentIntent) sandbox." />
+              <RoadmapItem text="Add retry & failover (PSP fallback) in backend." />
+              <RoadmapItem text="Routing score = cost + latency + auth rate + region." />
             </VStack>
           </MotionBox>
         </SimpleGrid>
       </Section>
 
       {/* CTA */}
-      <Section id="cta">
+      <Section id="cta" py={{ base: 12, md: 16 }}>
         <Flex
           direction={{ base: 'column', md: 'row' }}
           align="center"
@@ -252,7 +273,7 @@ export default function Landing() {
         >
           <VStack align="start" spacing={3}>
             <Heading size="lg">Start routing smarter, today.</Heading>
-            <Text color={subText}>Switch to the app to create your first transaction.</Text>
+            <Text color={subText}>Jump into the app and create your first transaction.</Text>
           </VStack>
           <Spacer />
           <BrandButton onClick={() => navigate('/app')}>Make a transaction</BrandButton>
@@ -260,7 +281,13 @@ export default function Landing() {
       </Section>
 
       {/* FOOTER */}
-      <Box as="footer" py={10} borderTop="1px solid" borderColor={useColorModeValue('blackAlpha.100', 'whiteAlpha.200')}>
+      <Box
+        as="footer"
+        py={10}
+        borderTop="1px solid"
+        borderColor={useColorModeValue('blackAlpha.100', 'whiteAlpha.200')}
+        bgGradient={useColorModeValue('linear(to-r, #f7fafc, #edf2f7)', 'linear(to-r, gray.900, gray.800)')}
+      >
         <Container maxW="6xl">
           <Flex align="center">
             <HStack spacing={3}>
@@ -341,6 +368,21 @@ function RoadmapItem({ text }) {
   );
 }
 
-function DividerLine() {
-  return <Box h="1px" bg={useColorModeValue('blackAlpha.100', 'whiteAlpha.200')} my={2} />;
+function MiniKpis({ metrics }) {
+  return (
+    <SimpleGrid columns={3} spacing={3}>
+      <Kpi label="Volume" value={`${(metrics.total_volume ?? 0).toFixed(0)}€`} />
+      <Kpi label="Tx" value={metrics.total_transactions ?? 0} />
+      <Kpi label="PSPs" value={Object.keys(metrics.transactions_by_psp || {}).length} />
+    </SimpleGrid>
+  );
+}
+
+function Kpi({ label, value }) {
+  return (
+    <Box p={3} borderRadius="lg" bg={useColorModeValue('gray.50','whiteAlpha.100')} textAlign="center">
+      <Text fontSize="xs" opacity={0.7}>{label}</Text>
+      <Heading size="md">{value}</Heading>
+    </Box>
+  );
 }
